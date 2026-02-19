@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TextWise &mdash; AI-Powered Text Toolkit</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          <path d="M8 7h8M8 11h6"/>
+        </svg>
+        <span class="logo-text">TextWise</span>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <span>Input Text</span>
+      </button>
+      <button class="nav-tab" data-tab="audiobook">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        </svg>
+        <span>Audiobook</span>
+      </button>
+      <button class="nav-tab" data-tab="summary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/>
+        </svg>
+        <span>Summarize</span>
+      </button>
+      <button class="nav-tab" data-tab="analyze">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        <span>Analyze</span>
+      </button>
+      <button class="nav-tab" data-tab="review">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        <span>Review</span>
+      </button>
+      <button class="nav-tab" data-tab="flashcards">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        <span>Flashcards</span>
+      </button>
+      <button class="nav-tab" data-tab="translate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+        </svg>
+        <span>Translate</span>
+      </button>
+      <button class="nav-tab" data-tab="qna">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span>Q&amp;A</span>
+      </button>
+      <button class="nav-tab" data-tab="export">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span>Export</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="nav-tab" id="settingsBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+        <span>Settings</span>
+      </button>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Mobile Top Bar -->
+  <header class="mobile-header" id="mobileHeader">
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="mobile-logo">
+      <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8M8 11h6"/>
+      </svg>
+      <span>TextWise</span>
+    </div>
+  </header>
+
+  <!-- Overlay for mobile sidebar -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
+
+    <!-- ============ INPUT TAB ============ -->
+    <section class="tab-panel active" id="panel-input">
+      <div class="panel-header">
+        <h1>Input Your Text</h1>
+        <p class="subtitle">Capture from camera, upload an image, or paste your text directly</p>
+      </div>
+
+      <div class="input-methods">
+        <button class="input-method-card" id="cameraBtn">
+          <div class="method-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>
+          <h3>Camera Capture</h3>
+          <p>Take a photo of printed or handwritten text</p>
+        </button>
+
+        <button class="input-method-card" id="uploadBtn">
+          <div class="method-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <h3>Upload Image</h3>
+          <p>Upload a photo or screenshot containing text</p>
+        </button>
+
+        <button class="input-method-card" id="pasteBtn">
+          <div class="method-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+            </svg>
+          </div>
+          <h3>Paste Text</h3>
+          <p>Type or paste text directly into the editor</p>
+        </button>
+
+        <button class="input-method-card" id="fileUploadBtn">
+          <div class="method-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
+          <h3>Upload File</h3>
+          <p>Upload a .txt, .md, or .pdf text file</p>
+        </button>
+      </div>
+
+      <input type="file" id="imageInput" accept="image/*" hidden>
+      <input type="file" id="fileInput" accept=".txt,.md,.text,.csv" hidden>
+
+      <div class="text-input-area" id="textInputArea" style="display:none;">
+        <div class="textarea-header">
+          <h3 id="inputSourceLabel">Your Text</h3>
+          <div class="textarea-actions">
+            <span class="char-count" id="charCount">0 characters</span>
+            <button class="btn-icon" id="clearTextBtn" title="Clear text">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+        <textarea id="mainTextarea" placeholder="Your extracted or pasted text will appear here. You can also edit it directly..."></textarea>
+        <div class="ocr-progress" id="ocrProgress" style="display:none;">
+          <div class="progress-bar"><div class="progress-fill" id="ocrProgressFill"></div></div>
+          <span class="progress-text" id="ocrProgressText">Recognizing text...</span>
+        </div>
+        <div class="text-actions">
+          <p class="helper-text">Text loaded! Use the tabs on the left to process it.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ AUDIOBOOK TAB ============ -->
+    <section class="tab-panel" id="panel-audiobook">
+      <div class="panel-header">
+        <h1>Audiobook Player</h1>
+        <p class="subtitle">Listen to your text with natural text-to-speech</p>
+      </div>
+
+      <div class="no-text-warning" id="audioNoText" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>No text loaded. Go to the <a href="#" data-goto="input">Input tab</a> to add text first.</p>
+      </div>
+
+      <div class="audiobook-container" id="audiobookContainer">
+        <div class="audio-text-display" id="audioTextDisplay"></div>
+
+        <div class="audio-controls">
+          <div class="audio-settings">
+            <div class="setting-group">
+              <label for="voiceSelect">Voice</label>
+              <select id="voiceSelect"></select>
+            </div>
+            <div class="setting-group">
+              <label for="speedRange">Speed: <span id="speedValue">1.0x</span></label>
+              <input type="range" id="speedRange" min="0.5" max="3" step="0.1" value="1">
+            </div>
+            <div class="setting-group">
+              <label for="pitchRange">Pitch: <span id="pitchValue">1.0</span></label>
+              <input type="range" id="pitchRange" min="0.5" max="2" step="0.1" value="1">
+            </div>
+          </div>
+
+          <div class="audio-progress">
+            <div class="progress-bar audio-progress-bar" id="audioProgressBar">
+              <div class="progress-fill" id="audioProgressFill"></div>
+            </div>
+            <div class="progress-times">
+              <span id="audioCurrentPos">--:--</span>
+              <span id="audioTotalTime">--:--</span>
+            </div>
+          </div>
+
+          <div class="audio-buttons">
+            <button class="btn-icon" id="audioRewind" title="Back 10 seconds">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/><text x="12" y="16" text-anchor="middle" font-size="8" fill="currentColor" stroke="none">10</text></svg>
+            </button>
+            <button class="btn-primary btn-play" id="audioPlayBtn">
+              <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <svg class="pause-icon" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </button>
+            <button class="btn-icon" id="audioStop" title="Stop">
+              <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SUMMARY TAB ============ -->
+    <section class="tab-panel" id="panel-summary">
+      <div class="panel-header">
+        <h1>Smart Summary</h1>
+        <p class="subtitle">Get AI-powered summaries at different detail levels</p>
+      </div>
+
+      <div class="no-text-warning" id="summaryNoText" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>No text loaded. Go to the <a href="#" data-goto="input">Input tab</a> to add text first.</p>
+      </div>
+
+      <div class="feature-container" id="summaryContainer">
+        <div class="option-pills">
+          <button class="pill active" data-length="brief">Brief</button>
+          <button class="pill" data-length="standard">Standard</button>
+          <button class="pill" data-length="detailed">Detailed</button>
+          <button class="pill" data-length="bullet">Bullet Points</button>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn-primary" id="summarizeBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Generate Summary
+          </button>
+        </div>
+
+        <div class="result-area" id="summaryResult">
+          <div class="result-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+            <p>Choose a summary style and click generate</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ANALYZE TAB ============ -->
+    <section class="tab-panel" id="panel-analyze">
+      <div class="panel-header">
+        <h1>Text Analysis</h1>
+        <p class="subtitle">Deep insights into your text's structure, readability, and content</p>
+      </div>
+
+      <div class="no-text-warning" id="analyzeNoText" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>No text loaded. Go to the <a href="#" data-goto="input">Input tab</a> to add text first.</p>
+      </div>
+
+      <div class="feature-container" id="analyzeContainer">
+        <div class="action-bar">
+          <button class="btn-primary" id="analyzeBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Analyze Text
+          </button>
+        </div>
+
+        <!-- Local stats (always shown after analysis) -->
+        <div class="stats-grid" id="statsGrid" style="display:none;">
+          <div class="stat-card">
+            <div class="stat-value" id="statWords">0</div>
+            <div class="stat-label">Words</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statChars">0</div>
+            <div class="stat-label">Characters</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statSentences">0</div>
+            <div class="stat-label">Sentences</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statParagraphs">0</div>
+            <div class="stat-label">Paragraphs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statReadTime">0m</div>
+            <div class="stat-label">Read Time</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statReadability">--</div>
+            <div class="stat-label">Reading Level</div>
+          </div>
+        </div>
+
+        <!-- AI analysis -->
+        <div class="result-area" id="analyzeResult">
+          <div class="result-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <p>Click analyze to get detailed text insights</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ REVIEW TAB ============ -->
+    <section class="tab-panel" id="panel-review">
+      <div class="panel-header">
+        <h1>Writing Review</h1>
+        <p class="subtitle">Grammar, style, and improvement suggestions powered by AI</p>
+      </div>
+
+      <div class="no-text-warning" id="reviewNoText" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>No text loaded. Go to the <a href="#" data-goto="input">Input tab</a> to add text first.</p>
+      </div>
+
+      <div class="feature-container" id="reviewContainer">
+        <div class="option-pills">
+          <button class="pill active" data-mode="full">Full Review</button>
+          <button class="pill" data-mode="grammar">Grammar Only</button>
+          <button class="pill" data-mode="style">Style & Tone</button>
+          <button class="pill" data-mode="clarity">Clarity</button>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn-primary" id="reviewBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Review Text
+          </button>
+        </div>
+
+        <div class="result-area" id="reviewResult">
+          <div class="result-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <p>Choose a review mode and click review</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FLASHCARDS TAB ============ -->
+    <section class="tab-panel" id="panel-flashcards">
+      <div class="panel-header">
+        <h1>Flashcard Generator</h1>
+        <p class="subtitle">Auto-generate study flashcards from your text</p>
+      </div>
+
+      <div class="no-text-warning" id="flashcardsNoText" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>No text loaded. Go to the <a href="#" data-goto="input">Input tab</a> to add text first.</p>
+      </div>
+
+      <div class="feature-container" id="flashcardsContainer">
+        <div class="option-pills">
+          <button class="pill active" data-count="5">5 Cards</button>
+          <button class="pill" data-count="10">10 Cards</button>
+          <button class="pill" data-count="15">15 Cards</button>
+          <button class="pill" data-count="20">20 Cards</button>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn-primary" id="flashcardsBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Generate Flashcards
+          </button>
+        </div>
+
+        <div class="flashcards-deck" id="flashcardsDeck" style="display:none;">
+          <div class="flashcard-nav">
+            <button class="btn-icon" id="fcPrev" title="Previous">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <span class="fc-counter" id="fcCounter">1 / 5</span>
+            <button class="btn-icon" id="fcNext" title="Next">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+          <div class="flashcard" id="flashcard">
+            <div class="flashcard-inner" id="flashcardInner">
+              <div class="flashcard-front">
+                <span class="fc-label">Question</span>
+                <p id="fcQuestion"></p>
+              </div>
+              <div class="flashcard-back">
+                <span class="fc-label">Answer</span>
+                <p id="fcAnswer"></p>
+              </div>
+            </div>
+          </div>
+          <p class="fc-hint">Click the card to flip</p>
+        </div>
+
+        <div class="result-area" id="flashcardsResult">
+          <div class="result-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <p>Select how many cards and click generate</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TRANSLATE TAB ============ -->
+    <section class="tab-panel" id="panel-translate">
+      <div class="panel-header">
+        <h1>Translate</h1>
+        <p class="subtitle">Translate your text into any language with AI</p>
+      </div>
+
+      <div class="no-text-warning" id="translateNoText" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>No text loaded. Go to the <a href="#" data-goto="input">Input tab</a> to add text first.</p>
+      </div>
+
+      <div class="feature-container" id="translateContainer">
+        <div class="translate-controls">
+          <div class="setting-group">
+            <label for="targetLang">Target Language</label>
+            <select id="targetLang">
+              <option value="Spanish">Spanish</option>
+              <option value="French">French</option>
+              <option value="German">German</option>
+              <option value="Italian">Italian</option>
+              <option value="Portuguese">Portuguese</option>
+              <option value="Chinese (Simplified)">Chinese (Simplified)</option>
+              <option value="Chinese (Traditional)">Chinese (Traditional)</option>
+              <option value="Japanese">Japanese</option>
+              <option value="Korean">Korean</option>
+              <option value="Arabic">Arabic</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Russian">Russian</option>
+              <option value="Dutch">Dutch</option>
+              <option value="Swedish">Swedish</option>
+              <option value="Polish">Polish</option>
+              <option value="Turkish">Turkish</option>
+              <option value="Vietnamese">Vietnamese</option>
+              <option value="Thai">Thai</option>
+              <option value="Indonesian">Indonesian</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn-primary" id="translateBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            Translate
+          </button>
+        </div>
+
+        <div class="result-area" id="translateResult">
+          <div class="result-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            <p>Select a target language and click translate</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Q&A TAB ============ -->
+    <section class="tab-panel" id="panel-qna">
+      <div class="panel-header">
+        <h1>Ask Questions</h1>
+        <p class="subtitle">Ask anything about your text and get AI-powered answers</p>
+      </div>
+
+      <div class="no-text-warning" id="qnaNoText" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>No text loaded. Go to the <a href="#" data-goto="input">Input tab</a> to add text first.</p>
+      </div>
+
+      <div class="feature-container" id="qnaContainer">
+        <div class="qna-input-row">
+          <input type="text" id="qnaInput" class="qna-text-input" placeholder="Ask a question about the text...">
+          <button class="btn-primary" id="qnaBtn">Ask</button>
+        </div>
+
+        <div class="qna-history" id="qnaHistory">
+          <div class="result-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <p>Type a question about your text above</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ EXPORT TAB ============ -->
+    <section class="tab-panel" id="panel-export">
+      <div class="panel-header">
+        <h1>Export</h1>
+        <p class="subtitle">Download your text and results in various formats</p>
+      </div>
+
+      <div class="no-text-warning" id="exportNoText" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>No text loaded. Go to the <a href="#" data-goto="input">Input tab</a> to add text first.</p>
+      </div>
+
+      <div class="feature-container" id="exportContainer">
+        <div class="export-grid">
+          <button class="export-card" data-format="txt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <h3>Plain Text</h3>
+            <p>.txt file</p>
+          </button>
+          <button class="export-card" data-format="md">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2l2 3 2-6 2 3h2"/></svg>
+            <h3>Markdown</h3>
+            <p>.md file</p>
+          </button>
+          <button class="export-card" data-format="html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <h3>HTML</h3>
+            <p>.html file</p>
+          </button>
+          <button class="export-card" data-format="json">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <h3>JSON Bundle</h3>
+            <p>All results</p>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Camera Modal -->
+  <div class="modal" id="cameraModal">
+    <div class="modal-content camera-modal-content">
+      <div class="modal-header">
+        <h2>Camera Capture</h2>
+        <button class="btn-icon modal-close" id="cameraClose">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="camera-container">
+        <video id="cameraFeed" autoplay playsinline></video>
+        <canvas id="cameraCanvas" style="display:none;"></canvas>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cameraSwitchBtn">Switch Camera</button>
+        <button class="btn-primary" id="cameraShutterBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+          Capture
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-content settings-modal-content">
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button class="btn-icon modal-close" id="settingsClose">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-section">
+          <h3>AI Provider</h3>
+          <p class="settings-hint">Enter your API key to enable AI-powered features (Summarize, Analyze, Review, Flashcards, Translate, Q&A). Your key is stored locally in your browser only.</p>
+          <div class="setting-group">
+            <label for="apiProvider">Provider</label>
+            <select id="apiProvider">
+              <option value="openai">OpenAI (GPT-4o)</option>
+              <option value="anthropic">Anthropic (Claude)</option>
+            </select>
+          </div>
+          <div class="setting-group">
+            <label for="apiKeyInput">API Key</label>
+            <div class="api-key-row">
+              <input type="password" id="apiKeyInput" placeholder="sk-...">
+              <button class="btn-secondary" id="saveApiKey">Save</button>
+            </div>
+          </div>
+          <div class="api-status" id="apiStatus"></div>
+        </div>
+        <div class="settings-section">
+          <h3>OCR Settings</h3>
+          <div class="setting-group">
+            <label for="ocrLang">Recognition Language</label>
+            <select id="ocrLang">
+              <option value="eng">English</option>
+              <option value="spa">Spanish</option>
+              <option value="fra">French</option>
+              <option value="deu">German</option>
+              <option value="ita">Italian</option>
+              <option value="por">Portuguese</option>
+              <option value="chi_sim">Chinese (Simplified)</option>
+              <option value="jpn">Japanese</option>
+              <option value="kor">Korean</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay" style="display:none;">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p id="loadingText">Processing...</p>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
