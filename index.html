@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@huggingface/transformers@3" type="module"></script>
 </head>
 <body>
   <!-- Sidebar Navigation -->
@@ -276,6 +277,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             Generate Summary
           </button>
+          <span class="ai-tier-badge" id="summaryTierBadge"></span>
         </div>
 
         <div class="result-area" id="summaryResult">
@@ -305,6 +307,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             Analyze Text
           </button>
+          <span class="ai-tier-badge" id="analyzeTierBadge"></span>
         </div>
 
         <!-- Local stats (always shown after analysis) -->
@@ -370,6 +373,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Review Text
           </button>
+          <span class="ai-tier-badge" id="reviewTierBadge"></span>
         </div>
 
         <div class="result-area" id="reviewResult">
@@ -406,6 +410,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             Generate Flashcards
           </button>
+          <span class="ai-tier-badge" id="flashcardsTierBadge"></span>
         </div>
 
         <div class="flashcards-deck" id="flashcardsDeck" style="display:none;">
@@ -487,6 +492,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
             Translate
           </button>
+          <span class="ai-tier-badge" id="translateTierBadge"></span>
         </div>
 
         <div class="result-area" id="translateResult">
@@ -514,6 +520,7 @@
         <div class="qna-input-row">
           <input type="text" id="qnaInput" class="qna-text-input" placeholder="Ask a question about the text...">
           <button class="btn-primary" id="qnaBtn">Ask</button>
+          <span class="ai-tier-badge" id="qnaTierBadge"></span>
         </div>
 
         <div class="qna-history" id="qnaHistory">
@@ -598,8 +605,26 @@
       </div>
       <div class="settings-body">
         <div class="settings-section">
-          <h3>AI Provider</h3>
-          <p class="settings-hint">Enter your API key to enable AI-powered features (Summarize, Analyze, Review, Flashcards, Translate, Q&A). Your key is stored locally in your browser only.</p>
+          <h3>Browser AI</h3>
+          <p class="settings-hint">Run AI directly in your browser for free — no API key needed. The model (~100 MB) downloads once and is cached. Works offline after first download.</p>
+          <div class="browser-ai-status" id="browserAIStatus">
+            <div class="browser-ai-status-row">
+              <span class="browser-ai-indicator" id="browserAIIndicator"></span>
+              <span id="browserAIStatusText">Not loaded</span>
+            </div>
+            <div class="browser-ai-progress" id="browserAIProgress" style="display:none;">
+              <div class="progress-bar"><div class="progress-fill" id="browserAIProgressFill"></div></div>
+              <span class="progress-text" id="browserAIProgressText">Downloading model...</span>
+            </div>
+          </div>
+          <button class="btn-primary" id="downloadBrowserAI" style="margin-top:12px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Model
+          </button>
+        </div>
+        <div class="settings-section">
+          <h3>AI Provider (API Key)</h3>
+          <p class="settings-hint">For best quality, enter an API key. Otherwise, Browser AI or local fallbacks are used automatically. Your key is stored locally only.</p>
           <div class="setting-group">
             <label for="apiProvider">Provider</label>
             <select id="apiProvider">
