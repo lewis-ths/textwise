@@ -20,6 +20,22 @@
 | **Q&A** | Ask questions about your text and get contextual answers |
 | **Export** | Download as .txt, .md, .html, or .json (includes all results) |
 
+## No API Key Required
+
+TextWise uses a **3-tier AI system** so core features work for everyone out of the box:
+
+| Tier | How it works | Quality |
+|---|---|---|
+| **Local** (default) | Built-in algorithms run instantly in your browser — no downloads, no sign-ups | Basic |
+| **Browser AI** | Download a small AI model (~100 MB) once in Settings — runs locally, works offline | Good |
+| **API Key** | Connect your own OpenAI or Anthropic key for full-powered AI | Best |
+
+**Features that work without any setup:** Summarize, Analyze, Review, Flashcards, OCR, Audiobook, Export
+
+**Features that need Browser AI or an API key:** Translate, Q&A
+
+Each feature shows a small badge (Local / Browser AI / API) so you always know which tier is active.
+
 ## Who is it for?
 
 - **Students** — Summarize readings, generate flashcards, check grammar, listen to study material
@@ -42,27 +58,32 @@ Visit [**lewis-ths.github.io/textwise**](https://lewis-ths.github.io/textwise/) 
 
 That's it — no build tools, no dependencies to install.
 
-### Set Up AI Features
+### Upgrade AI Quality (Optional)
 
-1. Click the **Settings** gear icon in the sidebar
-2. Select your AI provider (OpenAI or Anthropic)
+**Browser AI (free):**
+1. Click **Settings** in the sidebar
+2. Click **Download Model** under Browser AI
+3. Wait for the one-time download — it's cached for future use
+
+**API Key (best quality):**
+1. Click **Settings** in the sidebar
+2. Select your provider (OpenAI or Anthropic)
 3. Enter your API key and click Save
 
 Your key is stored in your browser's localStorage only — it never leaves your machine except to call the AI API directly.
-
-> **Note:** OCR (camera/image capture) and Audiobook work without an API key.
 
 ## Tech Stack
 
 - **HTML / CSS / JavaScript** — No frameworks, no build step
 - **[Tesseract.js](https://github.com/naptha/tesseract.js)** — Client-side OCR for image text extraction
+- **[Transformers.js](https://github.com/huggingface/transformers.js)** — Browser-based AI model inference (optional)
 - **[Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API)** — Browser-native text-to-speech
 - **[Marked](https://github.com/markedjs/marked)** — Markdown rendering for AI responses
-- **OpenAI / Anthropic API** — AI-powered summarization, analysis, review, flashcards, translation, and Q&A
+- **OpenAI / Anthropic API** — Optional API-powered AI for best quality results
 
 ## Browser Support
 
-Works in all modern browsers (Chrome, Edge, Firefox, Safari). Camera capture requires HTTPS or localhost.
+Works in all modern browsers (Chrome, Edge, Firefox, Safari). Camera capture requires HTTPS or localhost. Browser AI works best in Chrome/Edge with WebGPU support.
 
 ## License
 
