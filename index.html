@@ -1,17 +1,25 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="light" data-design="A">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TextWise &mdash; AI-Powered Text Toolkit</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@huggingface/transformers@3" type="module"></script>
 </head>
 <body>
+  <!-- Design Version Switcher (for presentation) -->
+  <div class="design-switcher" id="designSwitcher">
+    <span class="ds-label">Design:</span>
+    <button class="ds-btn active" data-design="A" title="Modern Minimal">A</button>
+    <button class="ds-btn" data-design="B" title="Vibrant Campus">B</button>
+    <button class="ds-btn" data-design="C" title="Dark Academic">C</button>
+  </div>
+
   <!-- Sidebar Navigation -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -77,6 +85,41 @@
         </svg>
         <span>Q&amp;A</span>
       </button>
+
+      <div class="nav-divider"></div>
+
+      <!-- NEW FEATURES -->
+      <button class="nav-tab" data-tab="readingmode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
+        </svg>
+        <span>Reading Mode</span>
+      </button>
+      <button class="nav-tab" data-tab="findreplace">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>
+        </svg>
+        <span>Find &amp; Replace</span>
+      </button>
+      <button class="nav-tab" data-tab="wordcloud">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17.5 19H9a7 7 0 110-14h.5"/><path d="M9.51 5A5 5 0 0117 9h.5a3.5 3.5 0 010 7H17"/>
+        </svg>
+        <span>Word Cloud</span>
+      </button>
+      <button class="nav-tab" data-tab="pomodoro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span>Study Timer</span>
+      </button>
+      <button class="nav-tab" data-tab="textdiff">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="8" height="18" rx="1"/><rect x="14" y="3" width="8" height="18" rx="1"/><line x1="10" y1="9" x2="14" y2="9"/><line x1="10" y1="15" x2="14" y2="15"/>
+        </svg>
+        <span>Text Compare</span>
+      </button>
+
       <button class="nav-tab" data-tab="export">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
@@ -310,7 +353,6 @@
           <span class="ai-tier-badge" id="analyzeTierBadge"></span>
         </div>
 
-        <!-- Local stats (always shown after analysis) -->
         <div class="stats-grid" id="statsGrid" style="display:none;">
           <div class="stat-card">
             <div class="stat-value" id="statWords">0</div>
@@ -338,7 +380,6 @@
           </div>
         </div>
 
-        <!-- AI analysis -->
         <div class="result-area" id="analyzeResult">
           <div class="result-placeholder">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -532,6 +573,215 @@
       </div>
     </section>
 
+    <!-- ============ READING MODE TAB (NEW) ============ -->
+    <section class="tab-panel" id="panel-readingmode">
+      <div class="panel-header">
+        <h1>Reading Mode</h1>
+        <p class="subtitle">Distraction-free reading with customizable display</p>
+      </div>
+
+      <div class="no-text-warning" id="readingmodeNoText" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>No text loaded. Go to the <a href="#" data-goto="input">Input tab</a> to add text first.</p>
+      </div>
+
+      <div class="feature-container" id="readingmodeContainer">
+        <div class="reading-controls">
+          <div class="reading-control-row">
+            <div class="setting-group">
+              <label for="readingFont">Font</label>
+              <select id="readingFont">
+                <option value="Inter">Sans-serif (Inter)</option>
+                <option value="Georgia, serif">Serif (Georgia)</option>
+                <option value="'Courier New', monospace">Monospace</option>
+                <option value="'Playfair Display', serif">Playfair Display</option>
+                <option value="'DM Sans', sans-serif">DM Sans</option>
+              </select>
+            </div>
+            <div class="setting-group">
+              <label for="readingSize">Size: <span id="readingSizeVal">18px</span></label>
+              <input type="range" id="readingSize" min="14" max="32" step="1" value="18">
+            </div>
+            <div class="setting-group">
+              <label for="readingSpacing">Line Height: <span id="readingSpacingVal">1.8</span></label>
+              <input type="range" id="readingSpacing" min="1.2" max="3" step="0.1" value="1.8">
+            </div>
+            <div class="setting-group">
+              <label for="readingWidth">Width: <span id="readingWidthVal">680px</span></label>
+              <input type="range" id="readingWidth" min="400" max="900" step="20" value="680">
+            </div>
+          </div>
+          <div class="reading-bg-options">
+            <button class="reading-bg-btn active" data-bg="default" title="Default">Aa</button>
+            <button class="reading-bg-btn sepia" data-bg="sepia" title="Sepia">Aa</button>
+            <button class="reading-bg-btn dark" data-bg="dark" title="Dark">Aa</button>
+            <button class="reading-bg-btn green" data-bg="green" title="Green">Aa</button>
+          </div>
+        </div>
+        <div class="reading-display" id="readingDisplay">
+          <div class="reading-text" id="readingText"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FIND & REPLACE TAB (NEW) ============ -->
+    <section class="tab-panel" id="panel-findreplace">
+      <div class="panel-header">
+        <h1>Find &amp; Replace</h1>
+        <p class="subtitle">Search, highlight, and bulk-replace text with precision</p>
+      </div>
+
+      <div class="no-text-warning" id="findreplaceNoText" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>No text loaded. Go to the <a href="#" data-goto="input">Input tab</a> to add text first.</p>
+      </div>
+
+      <div class="feature-container" id="findreplaceContainer">
+        <div class="fr-controls">
+          <div class="fr-row">
+            <div class="fr-input-group">
+              <label>Find</label>
+              <input type="text" id="frFindInput" placeholder="Search text..." class="qna-text-input">
+            </div>
+            <div class="fr-input-group">
+              <label>Replace with</label>
+              <input type="text" id="frReplaceInput" placeholder="Replacement..." class="qna-text-input">
+            </div>
+          </div>
+          <div class="fr-options">
+            <label class="fr-checkbox"><input type="checkbox" id="frCaseSensitive"> Case sensitive</label>
+            <label class="fr-checkbox"><input type="checkbox" id="frWholeWord"> Whole words only</label>
+            <label class="fr-checkbox"><input type="checkbox" id="frRegex"> Regex</label>
+          </div>
+          <div class="fr-actions">
+            <button class="btn-secondary" id="frFindBtn">Find All</button>
+            <button class="btn-secondary" id="frReplaceOneBtn">Replace Next</button>
+            <button class="btn-primary" id="frReplaceAllBtn">Replace All</button>
+            <span class="fr-match-count" id="frMatchCount"></span>
+          </div>
+        </div>
+        <div class="fr-preview" id="frPreview">
+          <div class="result-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <p>Enter a search term and click Find All</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ WORD CLOUD TAB (NEW) ============ -->
+    <section class="tab-panel" id="panel-wordcloud">
+      <div class="panel-header">
+        <h1>Word Cloud</h1>
+        <p class="subtitle">Visualize the most frequent words in your text</p>
+      </div>
+
+      <div class="no-text-warning" id="wordcloudNoText" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>No text loaded. Go to the <a href="#" data-goto="input">Input tab</a> to add text first.</p>
+      </div>
+
+      <div class="feature-container" id="wordcloudContainer">
+        <div class="action-bar">
+          <button class="btn-primary" id="wordcloudBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 110-14h.5"/><path d="M9.51 5A5 5 0 0117 9h.5a3.5 3.5 0 010 7H17"/></svg>
+            Generate Word Cloud
+          </button>
+          <div class="option-pills" style="margin-bottom:0;">
+            <button class="pill active" data-wccolor="vibrant">Vibrant</button>
+            <button class="pill" data-wccolor="ocean">Ocean</button>
+            <button class="pill" data-wccolor="sunset">Sunset</button>
+            <button class="pill" data-wccolor="mono">Mono</button>
+          </div>
+        </div>
+        <div class="wordcloud-display" id="wordcloudDisplay">
+          <div class="result-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.5 19H9a7 7 0 110-14h.5"/><path d="M9.51 5A5 5 0 0117 9h.5a3.5 3.5 0 010 7H17"/></svg>
+            <p>Click generate to create a word cloud</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ POMODORO / STUDY TIMER TAB (NEW) ============ -->
+    <section class="tab-panel" id="panel-pomodoro">
+      <div class="panel-header">
+        <h1>Study Timer</h1>
+        <p class="subtitle">Pomodoro technique to boost focus during study sessions</p>
+      </div>
+
+      <div class="feature-container" id="pomodoroContainer">
+        <div class="pomo-timer-card">
+          <div class="pomo-mode-pills">
+            <button class="pill active" data-pmode="focus">Focus</button>
+            <button class="pill" data-pmode="short">Short Break</button>
+            <button class="pill" data-pmode="long">Long Break</button>
+          </div>
+          <div class="pomo-display">
+            <svg class="pomo-ring" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="90" fill="none" stroke="var(--border)" stroke-width="6"/>
+              <circle class="pomo-progress-ring" cx="100" cy="100" r="90" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-dasharray="565.48" stroke-dashoffset="0" transform="rotate(-90 100 100)"/>
+            </svg>
+            <div class="pomo-time" id="pomoTime">25:00</div>
+            <div class="pomo-label" id="pomoLabel">Focus Time</div>
+          </div>
+          <div class="pomo-controls">
+            <button class="btn-primary" id="pomoStartBtn">Start</button>
+            <button class="btn-secondary" id="pomoResetBtn">Reset</button>
+          </div>
+          <div class="pomo-stats">
+            <div class="pomo-stat">
+              <span class="pomo-stat-value" id="pomoSessions">0</span>
+              <span class="pomo-stat-label">Sessions</span>
+            </div>
+            <div class="pomo-stat">
+              <span class="pomo-stat-value" id="pomoTotalTime">0m</span>
+              <span class="pomo-stat-label">Total Focus</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TEXT DIFF / COMPARE TAB (NEW) ============ -->
+    <section class="tab-panel" id="panel-textdiff">
+      <div class="panel-header">
+        <h1>Text Compare</h1>
+        <p class="subtitle">Compare two texts side-by-side and see what changed</p>
+      </div>
+
+      <div class="feature-container" id="textdiffContainer">
+        <div class="diff-inputs">
+          <div class="diff-input-col">
+            <label>Original Text</label>
+            <textarea id="diffOriginal" placeholder="Paste original text here..."></textarea>
+          </div>
+          <div class="diff-input-col">
+            <label>Modified Text</label>
+            <textarea id="diffModified" placeholder="Paste modified text here..."></textarea>
+          </div>
+        </div>
+        <div class="action-bar">
+          <button class="btn-primary" id="diffBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="8" height="18" rx="1"/><rect x="14" y="3" width="8" height="18" rx="1"/></svg>
+            Compare Texts
+          </button>
+          <button class="btn-secondary" id="diffSwapBtn">Swap</button>
+          <button class="btn-secondary" id="diffLoadBtn">Load Current Text as Original</button>
+        </div>
+        <div class="diff-output" id="diffOutput">
+          <div class="result-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="8" height="18" rx="1"/><rect x="14" y="3" width="8" height="18" rx="1"/></svg>
+            <p>Paste two texts and click Compare to see the differences</p>
+          </div>
+        </div>
+        <div class="diff-legend" id="diffLegend" style="display:none;">
+          <span class="diff-legend-item"><span class="diff-added-sample"></span> Added</span>
+          <span class="diff-legend-item"><span class="diff-removed-sample"></span> Removed</span>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ EXPORT TAB ============ -->
     <section class="tab-panel" id="panel-export">
       <div class="panel-header">
@@ -606,7 +856,7 @@
       <div class="settings-body">
         <div class="settings-section">
           <h3>Browser AI</h3>
-          <p class="settings-hint">Run AI directly in your browser for free — no API key needed. The model (~100 MB) downloads once and is cached. Works offline after first download.</p>
+          <p class="settings-hint">Run AI directly in your browser for free. The model (~100 MB) downloads once and is cached.</p>
           <div class="browser-ai-status" id="browserAIStatus">
             <div class="browser-ai-status-row">
               <span class="browser-ai-indicator" id="browserAIIndicator"></span>
@@ -624,7 +874,7 @@
         </div>
         <div class="settings-section">
           <h3>AI Provider (API Key)</h3>
-          <p class="settings-hint">For best quality, enter an API key. Otherwise, Browser AI or local fallbacks are used automatically. Your key is stored locally only.</p>
+          <p class="settings-hint">For best quality, enter an API key. Your key is stored locally only.</p>
           <div class="setting-group">
             <label for="apiProvider">Provider</label>
             <select id="apiProvider">

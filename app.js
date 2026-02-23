@@ -21,6 +21,13 @@
     browserAIReady: false,
     browserAILoading: false,
     browserAIPipeline: null,
+    // Pomodoro state
+    pomoInterval: null,
+    pomoTimeLeft: 25 * 60,
+    pomoRunning: false,
+    pomoMode: 'focus',
+    pomoSessions: 0,
+    pomoTotalFocusSeconds: 0,
   };
 
   // ---- DOM refs ----
@@ -30,6 +37,7 @@
   // ---- Init ----
   function init() {
     applyTheme(state.theme);
+    initDesignSwitcher();
     if (state.sidebarCollapsed) $('#sidebar').classList.add('collapsed');
     if (state.apiKey) $('#apiKeyInput').value = '••••••••••••••••';
     $('#apiProvider').value = state.apiProvider;
@@ -38,6 +46,25 @@
     populateVoices();
     updateAllTierBadges();
     switchTab('input');
+  }
+
+  // ---- Design Version Switcher ----
+  function initDesignSwitcher() {
+    const saved = localStorage.getItem('tw_design');
+    if (saved) {
+      document.documentElement.setAttribute('data-design', saved);
+      $$('.ds-btn[data-design]').forEach(function (btn) {
+        btn.classList.toggle('active', btn.dataset.design === saved);
+      });
+    }
+  }
+
+  function handleDesignSwitch(version) {
+    document.documentElement.setAttribute('data-design', version);
+    localStorage.setItem('tw_design', version);
+    $$('.ds-btn[data-design]').forEach(function (btn) {
+      btn.classList.toggle('active', btn.dataset.design === version);
+    });
   }
 
   // ---- Theme ----
@@ -56,7 +83,7 @@
 
     // Show/hide no-text warnings
     const hasText = state.text.trim().length > 0;
-    const tabs = ['audiobook', 'summary', 'analyze', 'review', 'flashcards', 'translate', 'qna', 'export'];
+    const tabs = ['audiobook', 'summary', 'analyze', 'review', 'flashcards', 'translate', 'qna', 'export', 'readingmode', 'findreplace', 'wordcloud'];
     tabs.forEach((t) => {
       const warn = $(`#${t}NoText`);
       const container = $(`#${t}Container`);
@@ -67,6 +94,15 @@
     // Audiobook: load text display
     if (tab === 'audiobook' && hasText) {
       $('#audioTextDisplay').textContent = state.text;
+    }
+
+    // Reading mode: populate text
+    if (tab === 'readingmode' && hasText) {
+      const readingText = $('#readingText');
+      if (readingText) {
+        readingText.textContent = state.text;
+        readingText.style.whiteSpace = 'pre-wrap';
+      }
     }
 
     // Close mobile sidebar
@@ -101,6 +137,13 @@
 
     // Theme
     $('#themeToggle').addEventListener('click', () => applyTheme(state.theme === 'light' ? 'dark' : 'light'));
+
+    // Design version switcher
+    $$('.ds-btn[data-design]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        handleDesignSwitch(btn.dataset.design);
+      });
+    });
 
     // Settings
     $('#settingsBtn').addEventListener('click', () => $('#settingsModal').classList.add('active'));
@@ -157,7 +200,7 @@
     $('#qnaBtn').addEventListener('click', handleQnA);
     $('#qnaInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleQnA(); });
 
-    // Pills
+    // Pills (generic handler for all pill groups)
     $$('.option-pills').forEach((group) => {
       group.querySelectorAll('.pill').forEach((pill) => {
         pill.addEventListener('click', () => {
@@ -179,6 +222,24 @@
     if (speechSynthesis.onvoiceschanged !== undefined) {
       speechSynthesis.onvoiceschanged = populateVoices;
     }
+
+    // ---- Reading Mode Bindings ----
+    bindReadingMode();
+
+    // ---- Find & Replace Bindings ----
+    bindFindReplace();
+
+    // ---- Word Cloud Bindings ----
+    bindWordCloud();
+
+    // ---- Pomodoro Bindings ----
+    bindPomodoro();
+
+    // ---- Text Diff Bindings ----
+    bindTextDiff();
+
+    // ---- Keyboard Shortcuts ----
+    bindKeyboardShortcuts();
   }
 
   // ---- API Key ----
@@ -1217,6 +1278,630 @@ ${state.text}`,
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  // ============================================================
+  //  NEW FEATURE: Reading Mode
+  // ============================================================
+
+  function bindReadingMode() {
+    var fontSelect = $('#readingFont');
+    var sizeRange = $('#readingSize');
+    var spacingRange = $('#readingSpacing');
+    var widthRange = $('#readingWidth');
+
+    if (fontSelect) {
+      fontSelect.addEventListener('change', function () {
+        var display = $('#readingDisplay');
+        if (display) display.style.fontFamily = fontSelect.value;
+      });
+    }
+
+    if (sizeRange) {
+      sizeRange.addEventListener('input', function () {
+        var readingText = $('#readingText');
+        if (readingText) readingText.style.fontSize = sizeRange.value + 'px';
+        var label = $('#readingSizeVal');
+        if (label) label.textContent = sizeRange.value + 'px';
+      });
+    }
+
+    if (spacingRange) {
+      spacingRange.addEventListener('input', function () {
+        var readingText = $('#readingText');
+        if (readingText) readingText.style.lineHeight = spacingRange.value;
+        var label = $('#readingSpacingVal');
+        if (label) label.textContent = spacingRange.value;
+      });
+    }
+
+    if (widthRange) {
+      widthRange.addEventListener('input', function () {
+        var display = $('#readingDisplay');
+        if (display) display.style.maxWidth = widthRange.value + 'px';
+        var label = $('#readingWidthVal');
+        if (label) label.textContent = widthRange.value + 'px';
+      });
+    }
+
+    // Background theme buttons
+    $$('.reading-bg-btn[data-bg]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var display = $('#readingDisplay');
+        if (!display) return;
+        // Remove all reading-bg classes
+        display.classList.remove('reading-sepia', 'reading-dark', 'reading-green');
+        var bg = btn.dataset.bg;
+        if (bg && bg !== 'default') {
+          display.classList.add('reading-' + bg);
+        }
+        // Update active state on buttons
+        $$('.reading-bg-btn[data-bg]').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+      });
+    });
+  }
+
+  // ============================================================
+  //  NEW FEATURE: Find & Replace
+  // ============================================================
+
+  function bindFindReplace() {
+    var findBtn = $('#frFindBtn');
+    var replaceOneBtn = $('#frReplaceOneBtn');
+    var replaceAllBtn = $('#frReplaceAllBtn');
+
+    if (findBtn) findBtn.addEventListener('click', frFindAll);
+    if (replaceOneBtn) replaceOneBtn.addEventListener('click', frReplaceNext);
+    if (replaceAllBtn) replaceAllBtn.addEventListener('click', frReplaceAll);
+  }
+
+  function frBuildPattern() {
+    var findVal = $('#frFindInput').value;
+    if (!findVal) return null;
+
+    var caseSensitive = $('#frCaseSensitive') && $('#frCaseSensitive').checked;
+    var wholeWord = $('#frWholeWord') && $('#frWholeWord').checked;
+    var useRegex = $('#frRegex') && $('#frRegex').checked;
+
+    var pattern = findVal;
+    if (!useRegex) {
+      // Escape regex special characters for literal search
+      pattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    if (wholeWord) {
+      pattern = '\\b' + pattern + '\\b';
+    }
+    var flags = 'g';
+    if (!caseSensitive) flags += 'i';
+
+    try {
+      return new RegExp(pattern, flags);
+    } catch (e) {
+      showToast('Invalid regex pattern: ' + e.message, 'error');
+      return null;
+    }
+  }
+
+  function frFindAll() {
+    if (!state.text.trim()) {
+      showToast('No text to search', 'warning');
+      return;
+    }
+    var regex = frBuildPattern();
+    if (!regex) return;
+
+    var matches = state.text.match(regex);
+    var count = matches ? matches.length : 0;
+
+    var countEl = $('#frMatchCount');
+    if (countEl) countEl.textContent = count + ' match' + (count !== 1 ? 'es' : '') + ' found';
+
+    // Build highlighted preview
+    var preview = $('#frPreview');
+    if (preview) {
+      if (count === 0) {
+        preview.innerHTML = '<em>No matches found.</em>';
+      } else {
+        // Reset regex lastIndex
+        regex.lastIndex = 0;
+        var highlighted = escapeHtml(state.text).replace(
+          new RegExp(regex.source, regex.flags),
+          function (m) { return '<mark class="fr-highlight">' + m + '</mark>'; }
+        );
+        preview.innerHTML = highlighted;
+      }
+    }
+  }
+
+  function frReplaceNext() {
+    if (!state.text.trim()) return;
+    var regex = frBuildPattern();
+    if (!regex) return;
+
+    var replaceVal = $('#frReplaceInput') ? $('#frReplaceInput').value : '';
+
+    // Remove global flag for single replacement
+    var singleFlags = regex.flags.replace('g', '');
+    var singleRegex;
+    try {
+      singleRegex = new RegExp(regex.source, singleFlags);
+    } catch (e) {
+      return;
+    }
+
+    var newText = state.text.replace(singleRegex, replaceVal);
+    if (newText === state.text) {
+      showToast('No match found to replace', 'info');
+      return;
+    }
+    state.text = newText;
+    $('#mainTextarea').value = state.text;
+    updateCharCount();
+    // Refresh preview
+    frFindAll();
+    showToast('Replaced first match', 'success');
+  }
+
+  function frReplaceAll() {
+    if (!state.text.trim()) return;
+    var regex = frBuildPattern();
+    if (!regex) return;
+
+    var replaceVal = $('#frReplaceInput') ? $('#frReplaceInput').value : '';
+
+    var matches = state.text.match(regex);
+    var count = matches ? matches.length : 0;
+
+    if (count === 0) {
+      showToast('No matches found to replace', 'info');
+      return;
+    }
+
+    state.text = state.text.replace(regex, replaceVal);
+    $('#mainTextarea').value = state.text;
+    updateCharCount();
+    // Refresh preview
+    frFindAll();
+    showToast('Replaced ' + count + ' match' + (count !== 1 ? 'es' : ''), 'success');
+  }
+
+  // ============================================================
+  //  NEW FEATURE: Word Cloud
+  // ============================================================
+
+  function bindWordCloud() {
+    var btn = $('#wordcloudBtn');
+    if (btn) btn.addEventListener('click', generateWordCloud);
+
+    // Color scheme pills
+    $$('.pill[data-wccolor]').forEach(function (pill) {
+      pill.addEventListener('click', function () {
+        $$('.pill[data-wccolor]').forEach(function (p) { p.classList.remove('active'); });
+        pill.classList.add('active');
+      });
+    });
+  }
+
+  function getWordCloudColorScheme() {
+    var active = $('.pill[data-wccolor].active');
+    var scheme = active ? active.dataset.wccolor : 'vibrant';
+    return scheme;
+  }
+
+  function getColorForScheme(scheme, index) {
+    var palettes = {
+      vibrant: ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#e91e63', '#00bcd4', '#8bc34a'],
+      ocean: ['#0077b6', '#00b4d8', '#0096c7', '#48cae4', '#023e8a', '#0a9396', '#005f73', '#94d2bd', '#2a9d8f', '#168aad'],
+      sunset: ['#e63946', '#f4a261', '#e76f51', '#9c27b0', '#d4380d', '#ff6b6b', '#cc5de8', '#f06292', '#ff7043', '#ab47bc'],
+      mono: ['#212529', '#495057', '#6c757d', '#868e96', '#adb5bd', '#343a40', '#525960', '#777e85', '#999fa5', '#bcc2c8'],
+    };
+    var palette = palettes[scheme] || palettes.vibrant;
+    return palette[index % palette.length];
+  }
+
+  function generateWordCloud() {
+    if (!state.text.trim()) {
+      showToast('No text to generate word cloud', 'warning');
+      return;
+    }
+
+    var display = $('#wordcloudDisplay');
+    if (!display) return;
+
+    // Stop words set
+    var stopWords = new Set([
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+      'from', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does',
+      'did', 'will', 'would', 'could', 'should', 'may', 'might', 'shall', 'can', 'this', 'that',
+      'these', 'those', 'it', 'its', 'i', 'me', 'my', 'we', 'our', 'you', 'your', 'he', 'she',
+      'his', 'her', 'they', 'them', 'their', 'what', 'which', 'who', 'whom', 'where', 'when',
+      'how', 'why', 'not', 'no', 'nor', 'if', 'then', 'than', 'so', 'as', 'up', 'out', 'about',
+      'into', 'over', 'after', 'before', 'between', 'under', 'again', 'there', 'here', 'all',
+      'each', 'every', 'both', 'few', 'more', 'most', 'other', 'some', 'such', 'only', 'very',
+      'just', 'also', 'now', 'too', 'any', 'much', 'many', 'well', 'back', 'even', 'still',
+      'own', 'same', 'able', 'get', 'got', 'like', 'make', 'made', 'said', 'one', 'two',
+    ]);
+
+    // Split text into words, clean, count frequencies
+    var words = state.text.toLowerCase().match(/\b[a-z]+\b/g) || [];
+    var freq = {};
+    words.forEach(function (w) {
+      if (w.length > 2 && !stopWords.has(w)) {
+        freq[w] = (freq[w] || 0) + 1;
+      }
+    });
+
+    // Sort by frequency and take top 50
+    var sorted = Object.entries(freq).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 50);
+
+    if (sorted.length === 0) {
+      display.innerHTML = '<em>Not enough words to generate a cloud.</em>';
+      return;
+    }
+
+    var maxFreq = sorted[0][1];
+    var minFreq = sorted[sorted.length - 1][1];
+    var scheme = getWordCloudColorScheme();
+
+    display.innerHTML = '';
+    sorted.forEach(function (entry, index) {
+      var word = entry[0];
+      var count = entry[1];
+
+      // Scale font size between 14 and 64
+      var size;
+      if (maxFreq === minFreq) {
+        size = 32;
+      } else {
+        size = 14 + ((count - minFreq) / (maxFreq - minFreq)) * 50;
+      }
+      size = Math.round(size);
+
+      var color = getColorForScheme(scheme, index);
+      var rotation = Math.round((Math.random() * 30) - 15); // -15 to 15
+
+      var span = document.createElement('span');
+      span.className = 'wc-word';
+      span.textContent = word;
+      span.style.fontSize = size + 'px';
+      span.style.color = color;
+      span.style.display = 'inline-block';
+      span.style.padding = '4px 8px';
+      span.style.margin = '4px';
+      span.style.transform = 'rotate(' + rotation + 'deg)';
+      span.style.cursor = 'default';
+      span.title = word + ' (' + count + ')';
+
+      display.appendChild(span);
+    });
+
+    showToast('Word cloud generated with ' + sorted.length + ' words', 'success');
+  }
+
+  // ============================================================
+  //  NEW FEATURE: Pomodoro / Study Timer
+  // ============================================================
+
+  var pomodoroModes = {
+    focus: 25 * 60,
+    short: 5 * 60,
+    long: 15 * 60,
+  };
+
+  function bindPomodoro() {
+    // Mode pills
+    $$('.pill[data-pmode]').forEach(function (pill) {
+      pill.addEventListener('click', function () {
+        $$('.pill[data-pmode]').forEach(function (p) { p.classList.remove('active'); });
+        pill.classList.add('active');
+        var mode = pill.dataset.pmode;
+        state.pomoMode = mode;
+        pomoReset();
+      });
+    });
+
+    var startBtn = $('#pomoStartBtn');
+    var resetBtn = $('#pomoResetBtn');
+
+    if (startBtn) startBtn.addEventListener('click', pomoToggle);
+    if (resetBtn) resetBtn.addEventListener('click', pomoReset);
+  }
+
+  function pomoUpdateDisplay() {
+    var mins = Math.floor(state.pomoTimeLeft / 60);
+    var secs = state.pomoTimeLeft % 60;
+    var timeEl = $('#pomoTime');
+    if (timeEl) timeEl.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+
+    // Update ring
+    var totalTime = pomodoroModes[state.pomoMode] || 25 * 60;
+    var elapsed = totalTime - state.pomoTimeLeft;
+    var offset = 565.48 * (1 - elapsed / totalTime);
+    var ring = $('.pomo-progress-ring');
+    if (ring) ring.style.strokeDashoffset = offset;
+  }
+
+  function pomoToggle() {
+    if (state.pomoRunning) {
+      // Pause
+      clearInterval(state.pomoInterval);
+      state.pomoRunning = false;
+      var btn = $('#pomoStartBtn');
+      if (btn) btn.textContent = 'Start';
+    } else {
+      // Start
+      state.pomoRunning = true;
+      var btn2 = $('#pomoStartBtn');
+      if (btn2) btn2.textContent = 'Pause';
+
+      state.pomoInterval = setInterval(function () {
+        if (state.pomoTimeLeft <= 0) {
+          // Timer complete
+          clearInterval(state.pomoInterval);
+          state.pomoRunning = false;
+          var startBtn = $('#pomoStartBtn');
+          if (startBtn) startBtn.textContent = 'Start';
+
+          // Play beep
+          pomoPlayBeep();
+
+          if (state.pomoMode === 'focus') {
+            state.pomoSessions++;
+            state.pomoTotalFocusSeconds += (pomodoroModes.focus || 25 * 60);
+            var sessionsEl = $('#pomoSessions');
+            if (sessionsEl) sessionsEl.textContent = state.pomoSessions;
+            var totalEl = $('#pomoTotalTime');
+            if (totalEl) totalEl.textContent = Math.floor(state.pomoTotalFocusSeconds / 60);
+            showToast('Focus session complete! Take a break.', 'success');
+          } else {
+            showToast('Break is over! Ready for the next session?', 'info');
+          }
+
+          // Reset to current mode's time
+          state.pomoTimeLeft = pomodoroModes[state.pomoMode] || 25 * 60;
+          pomoUpdateDisplay();
+          return;
+        }
+
+        state.pomoTimeLeft--;
+        pomoUpdateDisplay();
+
+        // Track focus time in real-time
+        if (state.pomoMode === 'focus') {
+          state.pomoTotalFocusSeconds++;
+          var totalEl = $('#pomoTotalTime');
+          if (totalEl) totalEl.textContent = Math.floor(state.pomoTotalFocusSeconds / 60);
+        }
+      }, 1000);
+    }
+  }
+
+  function pomoReset() {
+    clearInterval(state.pomoInterval);
+    state.pomoRunning = false;
+    state.pomoTimeLeft = pomodoroModes[state.pomoMode] || 25 * 60;
+    pomoUpdateDisplay();
+    var btn = $('#pomoStartBtn');
+    if (btn) btn.textContent = 'Start';
+  }
+
+  function pomoPlayBeep() {
+    try {
+      var ctx = new AudioContext();
+      var osc = ctx.createOscillator();
+      osc.frequency.value = 800;
+      osc.type = 'sine';
+      osc.connect(ctx.destination);
+      osc.start();
+      setTimeout(function () { osc.stop(); }, 200);
+    } catch (e) {
+      // AudioContext not available, silently fail
+    }
+  }
+
+  // ============================================================
+  //  NEW FEATURE: Text Compare / Diff
+  // ============================================================
+
+  function bindTextDiff() {
+    var loadBtn = $('#diffLoadBtn');
+    var swapBtn = $('#diffSwapBtn');
+    var diffBtn = $('#diffBtn');
+
+    if (loadBtn) loadBtn.addEventListener('click', function () {
+      var orig = $('#diffOriginal');
+      if (orig) orig.value = state.text;
+      showToast('Current text loaded as original', 'info');
+    });
+
+    if (swapBtn) swapBtn.addEventListener('click', function () {
+      var orig = $('#diffOriginal');
+      var mod = $('#diffModified');
+      if (orig && mod) {
+        var tmp = orig.value;
+        orig.value = mod.value;
+        mod.value = tmp;
+        showToast('Texts swapped', 'info');
+      }
+    });
+
+    if (diffBtn) diffBtn.addEventListener('click', performDiff);
+  }
+
+  function performDiff() {
+    var origEl = $('#diffOriginal');
+    var modEl = $('#diffModified');
+    if (!origEl || !modEl) return;
+
+    var origText = origEl.value;
+    var modText = modEl.value;
+
+    if (!origText.trim() && !modText.trim()) {
+      showToast('Please enter text in both fields', 'warning');
+      return;
+    }
+
+    var origWords = origText.split(/(\s+)/);
+    var modWords = modText.split(/(\s+)/);
+
+    // Compute LCS using dynamic programming
+    var lcs = computeLCS(origWords, modWords);
+
+    // Build diff output
+    var diffTokens = buildDiffTokens(origWords, modWords, lcs);
+
+    // Render
+    var output = $('#diffOutput');
+    if (output) {
+      output.innerHTML = '';
+      diffTokens.forEach(function (token) {
+        var span = document.createElement('span');
+        span.textContent = token.text;
+        if (token.type === 'added') {
+          span.className = 'diff-added';
+        } else if (token.type === 'removed') {
+          span.className = 'diff-removed';
+        } else {
+          span.className = 'diff-same';
+        }
+        output.appendChild(span);
+      });
+    }
+
+    // Show legend
+    var legend = $('#diffLegend');
+    if (legend) legend.style.display = 'flex';
+
+    showToast('Comparison complete', 'success');
+  }
+
+  function computeLCS(a, b) {
+    var m = a.length;
+    var n = b.length;
+
+    // Create DP table
+    var dp = [];
+    for (var i = 0; i <= m; i++) {
+      dp[i] = [];
+      for (var j = 0; j <= n; j++) {
+        dp[i][j] = 0;
+      }
+    }
+
+    for (var i = 1; i <= m; i++) {
+      for (var j = 1; j <= n; j++) {
+        if (a[i - 1] === b[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1] + 1;
+        } else {
+          dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
+      }
+    }
+
+    // Backtrack to find LCS
+    var lcs = [];
+    var i = m;
+    var j = n;
+    while (i > 0 && j > 0) {
+      if (a[i - 1] === b[j - 1]) {
+        lcs.unshift({ val: a[i - 1], ai: i - 1, bi: j - 1 });
+        i--;
+        j--;
+      } else if (dp[i - 1][j] > dp[i][j - 1]) {
+        i--;
+      } else {
+        j--;
+      }
+    }
+
+    return lcs;
+  }
+
+  function buildDiffTokens(origWords, modWords, lcs) {
+    var tokens = [];
+    var oi = 0;
+    var mi = 0;
+    var li = 0;
+
+    while (oi < origWords.length || mi < modWords.length) {
+      if (li < lcs.length) {
+        // Add removed words (in original but not in LCS at this point)
+        while (oi < lcs[li].ai) {
+          tokens.push({ text: origWords[oi], type: 'removed' });
+          oi++;
+        }
+        // Add added words (in modified but not in LCS at this point)
+        while (mi < lcs[li].bi) {
+          tokens.push({ text: modWords[mi], type: 'added' });
+          mi++;
+        }
+        // Add the common word
+        tokens.push({ text: lcs[li].val, type: 'same' });
+        oi++;
+        mi++;
+        li++;
+      } else {
+        // Remaining words after LCS is exhausted
+        while (oi < origWords.length) {
+          tokens.push({ text: origWords[oi], type: 'removed' });
+          oi++;
+        }
+        while (mi < modWords.length) {
+          tokens.push({ text: modWords[mi], type: 'added' });
+          mi++;
+        }
+      }
+    }
+
+    return tokens;
+  }
+
+  // ============================================================
+  //  NEW FEATURE: Keyboard Shortcuts
+  // ============================================================
+
+  function bindKeyboardShortcuts() {
+    document.addEventListener('keydown', function (e) {
+      // Ctrl+Shift+1 through Ctrl+Shift+9: switch tabs by index
+      if (e.ctrlKey && e.shiftKey && e.key >= '1' && e.key <= '9') {
+        e.preventDefault();
+        var tabIndex = parseInt(e.key) - 1;
+        var allTabs = [];
+        $$('.nav-tab[data-tab]').forEach(function (btn) {
+          allTabs.push(btn.dataset.tab);
+        });
+        if (tabIndex < allTabs.length) {
+          switchTab(allTabs[tabIndex]);
+        }
+        return;
+      }
+
+      // Ctrl+E: toggle reading mode
+      if (e.ctrlKey && !e.shiftKey && (e.key === 'e' || e.key === 'E')) {
+        e.preventDefault();
+        if (state.currentTab === 'readingmode') {
+          switchTab('input');
+        } else {
+          switchTab('readingmode');
+        }
+        return;
+      }
+
+      // Escape: close any open modal
+      if (e.key === 'Escape') {
+        var settingsModal = $('#settingsModal');
+        if (settingsModal && settingsModal.classList.contains('active')) {
+          settingsModal.classList.remove('active');
+          return;
+        }
+        var cameraModal = $('#cameraModal');
+        if (cameraModal && cameraModal.classList.contains('active')) {
+          closeCamera();
+          return;
+        }
+      }
+    });
   }
 
   // ---- Toasts ----
