@@ -117,6 +117,14 @@
     // Goto links in warnings
     $$('[data-goto]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); switchTab(a.dataset.goto); }));
 
+    // Nav group collapse/expand
+    $$('.nav-group-header[data-toggle-group]').forEach((header) => {
+      header.addEventListener('click', () => {
+        const group = header.closest('.nav-group');
+        if (group) group.classList.toggle('collapsed');
+      });
+    });
+
     // Sidebar toggle
     $('#sidebarToggle').addEventListener('click', () => {
       const sb = $('#sidebar');
@@ -267,6 +275,9 @@
   }
 
   function clearText() {
+    if (speechSynthesis.speaking || speechSynthesis.paused) {
+      stopAudio();
+    }
     state.text = '';
     state.results = { summary: '', analysis: '', review: '', flashcards: [], translate: '', qna: [] };
     $('#mainTextarea').value = '';
@@ -393,6 +404,12 @@
   function handleFileUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
+    // Check file size (max 2MB for text files)
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('File too large. Maximum size is 2MB.', 'warning');
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev) => loadText(ev.target.result, `File (${file.name})`);
     reader.readAsText(file);
@@ -587,7 +604,7 @@
     return result;
   }
 
-  function localReview(text) {
+  function localReview(text, mode) {
     const issues = [];
     const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0);
 
@@ -641,13 +658,24 @@
       issues.push({ type: 'Formatting', issue: 'Multiple consecutive spaces found', suggestion: 'Use single spaces between words' });
     }
 
-    // Build result
-    let result = '## Writing Review (Local)\n\n';
-    if (issues.length === 0) {
+    // Filter issues by mode
+    let filtered = issues;
+    if (mode === 'grammar') {
+      filtered = issues.filter(i => i.type === 'Grammar' || i.type === 'Spelling' || i.type === 'Capitalization');
+    } else if (mode === 'style') {
+      filtered = issues.filter(i => i.type === 'Formatting' || i.type === 'Readability');
+    } else if (mode === 'clarity') {
+      filtered = issues.filter(i => i.type === 'Readability');
+    }
+    // 'full' mode shows all
+
+    const modeLabels = { full: 'Full Review', grammar: 'Grammar Check', style: 'Style & Tone', clarity: 'Clarity' };
+    let result = `## ${modeLabels[mode] || 'Writing Review'} (Local)\n\n`;
+    if (filtered.length === 0) {
       result += 'No obvious issues found. The text looks clean!\n\n';
     } else {
-      result += `Found **${issues.length}** potential issue${issues.length > 1 ? 's' : ''}:\n\n`;
-      issues.forEach((issue, i) => {
+      result += `Found **${filtered.length}** potential issue${filtered.length > 1 ? 's' : ''}:\n\n`;
+      filtered.forEach((issue, i) => {
         result += `### ${i + 1}. ${issue.type}\n`;
         result += `- **Issue:** ${issue.issue}\n`;
         result += `- **Suggestion:** ${issue.suggestion}\n\n`;
@@ -897,7 +925,7 @@ ${state.text}`,
     const tier = getAITier('review');
 
     if (tier === 'local') {
-      const result = localReview(state.text);
+      const result = localReview(state.text, mode);
       state.results.review = result;
       renderResult('#reviewResult', result, 'Writing Review (Local)');
       showToast('Review complete (local)', 'success');
@@ -1031,7 +1059,11 @@ ${state.text}`,
       renderResult('#translateResult', result, `Translation (${lang})`);
       showToast('Translation complete', 'success');
     } catch (err) {
-      if (err.message !== 'No API key') showToast(err.message, 'error');
+      if (err.message === 'No AI available') {
+        showToast('Translation requires Browser AI or an API key. Enable one in Settings.', 'warning');
+      } else {
+        showToast(err.message, 'error');
+      }
     }
     hideLoading();
   }
@@ -1068,7 +1100,7 @@ ${state.text}`,
       item.querySelector('.qna-answer').innerHTML = html;
       state.results.qna.push({ question, answer });
     } catch (err) {
-      item.querySelector('.qna-answer').innerHTML = `<em style="color:var(--error)">${err.message === 'No API key' ? 'Please set your API key in Settings.' : err.message}</em>`;
+      item.querySelector('.qna-answer').innerHTML = `<em style="color:var(--error)">${err.message === 'No AI available' ? 'Q&A requires Browser AI or an API key. Enable one in Settings.' : err.message}</em>`;
     }
   }
 
@@ -1403,13 +1435,23 @@ ${state.text}`,
       if (count === 0) {
         preview.innerHTML = '<em>No matches found.</em>';
       } else {
-        // Reset regex lastIndex
+        // Build highlighted preview by splitting text on matches
         regex.lastIndex = 0;
-        var highlighted = escapeHtml(state.text).replace(
-          new RegExp(regex.source, regex.flags),
-          function (m) { return '<mark class="fr-highlight">' + m + '</mark>'; }
-        );
-        preview.innerHTML = highlighted;
+        var parts = [];
+        var lastIdx = 0;
+        var m2;
+        while ((m2 = regex.exec(state.text)) !== null) {
+          if (m2.index > lastIdx) {
+            parts.push(escapeHtml(state.text.slice(lastIdx, m2.index)));
+          }
+          parts.push('<mark class="fr-highlight">' + escapeHtml(m2[0]) + '</mark>');
+          lastIdx = m2.index + m2[0].length;
+          if (m2[0].length === 0) { regex.lastIndex++; } // prevent infinite loop on zero-length match
+        }
+        if (lastIdx < state.text.length) {
+          parts.push(escapeHtml(state.text.slice(lastIdx)));
+        }
+        preview.innerHTML = parts.join('');
       }
     }
   }
@@ -1652,7 +1694,7 @@ ${state.text}`,
             var sessionsEl = $('#pomoSessions');
             if (sessionsEl) sessionsEl.textContent = state.pomoSessions;
             var totalEl = $('#pomoTotalTime');
-            if (totalEl) totalEl.textContent = Math.floor(state.pomoTotalFocusSeconds / 60);
+            if (totalEl) totalEl.textContent = Math.floor(state.pomoTotalFocusSeconds / 60) + 'm';
             showToast('Focus session complete! Take a break.', 'success');
           } else {
             showToast('Break is over! Ready for the next session?', 'info');
@@ -1666,13 +1708,6 @@ ${state.text}`,
 
         state.pomoTimeLeft--;
         pomoUpdateDisplay();
-
-        // Track focus time in real-time
-        if (state.pomoMode === 'focus') {
-          state.pomoTotalFocusSeconds++;
-          var totalEl = $('#pomoTotalTime');
-          if (totalEl) totalEl.textContent = Math.floor(state.pomoTotalFocusSeconds / 60);
-        }
       }, 1000);
     }
   }
@@ -1863,6 +1898,13 @@ ${state.text}`,
 
   function bindKeyboardShortcuts() {
     document.addEventListener('keydown', function (e) {
+      // Don't capture shortcuts when user is typing in an input/textarea
+      var tag = document.activeElement && document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+        // Only allow Escape to still work
+        if (e.key !== 'Escape') return;
+      }
+
       // Ctrl+Shift+1 through Ctrl+Shift+9: switch tabs by index
       if (e.ctrlKey && e.shiftKey && e.key >= '1' && e.key <= '9') {
         e.preventDefault();

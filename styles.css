@@ -247,7 +247,7 @@ ul, ol {
 }
 
 /* Sidebar Nav */
-.sidebar-nav {
+.nav-tabs {
   flex: 1;
   padding: 8px 10px;
   display: flex;
@@ -287,13 +287,13 @@ ul, ol {
   flex-shrink: 0;
 }
 
-.nav-tab .nav-label {
+.nav-tab span {
   font-size: 0.875rem;
   font-weight: 500;
   transition: opacity 0.2s ease;
 }
 
-.sidebar.collapsed .nav-tab .nav-label {
+.sidebar.collapsed .nav-tab span {
   opacity: 0;
   width: 0;
   overflow: hidden;
@@ -338,7 +338,7 @@ ul, ol {
   padding: 10px;
 }
 
-.sidebar.collapsed .theme-toggle .nav-label {
+.sidebar.collapsed .theme-toggle span {
   opacity: 0;
   width: 0;
   overflow: hidden;
@@ -362,7 +362,7 @@ ul, ol {
   gap: 12px;
 }
 
-.hamburger-btn {
+.mobile-menu-btn {
   width: 40px;
   height: 40px;
   display: flex;
@@ -374,11 +374,11 @@ ul, ol {
   transition: background 0.2s ease;
 }
 
-.hamburger-btn:hover {
+.mobile-menu-btn:hover {
   background: var(--bg-sidebar-hover);
 }
 
-.hamburger-btn svg {
+.mobile-menu-btn svg {
   width: 22px;
   height: 22px;
 }
@@ -477,7 +477,7 @@ ul, ol {
    7. INPUT METHODS GRID
    ========================================================== */
 
-.input-methods-grid {
+.input-methods {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 14px;
@@ -535,7 +535,7 @@ ul, ol {
    8. TEXT INPUT AREA
    ========================================================== */
 
-.text-input-container {
+.text-input-area {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -544,12 +544,12 @@ ul, ol {
   transition: border-color 0.2s ease;
 }
 
-.text-input-container:focus-within {
+.text-input-area:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
-.text-input-header {
+.textarea-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -557,7 +557,7 @@ ul, ol {
   border-bottom: 1px solid var(--border-light);
 }
 
-.text-input-label {
+.textarea-header h3 {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-secondary);
@@ -585,7 +585,7 @@ ul, ol {
   background: rgba(239, 68, 68, 0.08);
 }
 
-.text-input-container textarea {
+.text-input-area textarea {
   width: 100%;
   min-height: 280px;
   padding: 16px;
@@ -596,11 +596,11 @@ ul, ol {
   color: var(--text-primary);
 }
 
-.text-input-container textarea::placeholder {
+.text-input-area textarea::placeholder {
   color: var(--text-tertiary);
 }
 
-.text-input-footer {
+.text-actions {
   padding: 8px 16px;
   border-top: 1px solid var(--border-light);
   display: flex;
@@ -744,7 +744,7 @@ ul, ol {
    11. OPTION PILLS
    ========================================================== */
 
-.pills-row {
+.option-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -862,7 +862,7 @@ ul, ol {
   margin-bottom: 20px;
 }
 
-.ai-status-indicator {
+.browser-ai-status-row {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -870,7 +870,7 @@ ul, ol {
   font-weight: 500;
 }
 
-.ai-status-dot {
+.browser-ai-indicator {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -878,16 +878,16 @@ ul, ol {
   flex-shrink: 0;
 }
 
-.ai-status-dot.ready {
+.browser-ai-indicator.ready {
   background: var(--success);
 }
 
-.ai-status-dot.loading {
+.browser-ai-indicator.loading {
   background: var(--warning);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-.ai-status-dot.error {
+.browser-ai-indicator.error {
   background: var(--error);
 }
 
@@ -1118,7 +1118,7 @@ ul, ol {
    18. AUDIOBOOK CONTROLS
    ========================================================== */
 
-.audiobook-text-display {
+.audio-text-display {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -1131,34 +1131,34 @@ ul, ol {
   font-size: 1rem;
 }
 
-.audiobook-text-display .word-highlight {
+.audio-text-display .word-highlight {
   background: var(--accent-light);
   border-radius: 3px;
   padding: 1px 2px;
   transition: background 0.15s ease;
 }
 
-.audiobook-settings {
+.audio-settings {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 20px;
 }
 
-.audio-setting {
+.audio-settings .setting-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.audio-setting label {
+.audio-settings .setting-group label {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-secondary);
 }
 
-.audio-setting select,
-.audio-setting input[type="range"] {
+.audio-settings .setting-group select,
+.audio-settings .setting-group input[type="range"] {
   width: 100%;
   padding: 8px 12px;
   background: var(--bg-secondary);
@@ -1168,7 +1168,7 @@ ul, ol {
   cursor: pointer;
 }
 
-.audio-setting select {
+.audio-settings .setting-group select {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238b92a0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -1196,7 +1196,7 @@ ul, ol {
   transition: width 0.2s ease;
 }
 
-.audio-time {
+.progress-times {
   display: flex;
   justify-content: space-between;
   font-size: 0.78rem;
@@ -1205,7 +1205,7 @@ ul, ol {
   font-variant-numeric: tabular-nums;
 }
 
-.audiobook-controls {
+.audio-buttons {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1213,7 +1213,7 @@ ul, ol {
   margin-bottom: 20px;
 }
 
-.audiobook-controls .btn-primary {
+.audio-buttons .btn-primary {
   min-width: 100px;
 }
 
@@ -1221,7 +1221,7 @@ ul, ol {
    19. FLASHCARDS
    ========================================================== */
 
-.flashcards-container {
+.flashcards-deck {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
@@ -1242,7 +1242,7 @@ ul, ol {
   transform-style: preserve-3d;
 }
 
-.flashcard.flipped .flashcard-inner {
+.flashcard-inner.flipped {
   transform: rotateY(180deg);
 }
 
@@ -1282,7 +1282,7 @@ ul, ol {
   margin-top: 16px;
 }
 
-.flashcard-counter {
+.fc-counter {
   font-size: 0.85rem;
   color: var(--text-secondary);
   font-weight: 500;
@@ -1294,7 +1294,7 @@ ul, ol {
    ========================================================== */
 
 /* Translate */
-.translate-settings {
+.translate-controls {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1302,7 +1302,7 @@ ul, ol {
   flex-wrap: wrap;
 }
 
-.translate-settings select {
+.translate-controls select {
   padding: 8px 14px;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
@@ -1335,13 +1335,13 @@ ul, ol {
 }
 
 /* Q&A */
-.qa-input-row {
+.qna-input-row {
   display: flex;
   gap: 10px;
   margin-bottom: 16px;
 }
 
-.qa-input-row input {
+.qna-text-input {
   flex: 1;
   padding: 10px 16px;
   background: var(--bg-secondary);
@@ -1351,31 +1351,31 @@ ul, ol {
   transition: border-color 0.2s ease;
 }
 
-.qa-input-row input:focus {
+.qna-text-input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
-.qa-history {
+.qna-history {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.qa-item {
+.qna-item {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 16px;
 }
 
-.qa-question {
+.qna-question {
   font-weight: 600;
   margin-bottom: 8px;
   color: var(--accent);
 }
 
-.qa-answer {
+.qna-answer {
   color: var(--text-primary);
   line-height: 1.7;
 }
@@ -1427,7 +1427,7 @@ ul, ol {
    21. MODALS
    ========================================================== */
 
-.modal-overlay {
+.modal {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
@@ -1441,7 +1441,7 @@ ul, ol {
   animation: fadeIn 0.2s ease;
 }
 
-.modal-overlay.active {
+.modal.active {
   display: flex;
 }
 
@@ -1508,11 +1508,11 @@ ul, ol {
 }
 
 /* Camera modal */
-.camera-modal .modal-content {
+.camera-modal-content {
   max-width: 640px;
 }
 
-.camera-preview {
+.camera-container {
   width: 100%;
   border-radius: var(--radius-md);
   background: #000;
@@ -1520,7 +1520,7 @@ ul, ol {
   margin-bottom: 16px;
 }
 
-.camera-controls {
+.modal-actions {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1528,36 +1528,19 @@ ul, ol {
 }
 
 /* Settings modal */
-.settings-modal .modal-content {
+.settings-modal-content {
   max-width: 480px;
 }
 
-.settings-group {
+.settings-section {
   margin-bottom: 20px;
 }
 
-.settings-group h3 {
+.settings-section h3 {
   font-size: 0.9rem;
   font-weight: 600;
   margin-bottom: 12px;
   color: var(--text-secondary);
-}
-
-.settings-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.settings-row:last-child {
-  border-bottom: none;
-}
-
-.settings-row label {
-  font-size: 0.9rem;
-  font-weight: 500;
 }
 
 /* Toggle switch */
@@ -1627,12 +1610,17 @@ ul, ol {
   }
 }
 
-.loading-text {
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.loading-spinner p {
   color: #ffffff;
   font-size: 0.9rem;
   font-weight: 500;
-  margin-top: 16px;
-  text-align: center;
 }
 
 /* ==========================================================
@@ -1676,29 +1664,29 @@ ul, ol {
   }
 }
 
-.toast.toast-success {
+.toast.success {
   border-left: 3px solid var(--success);
 }
 
-.toast.toast-success svg { color: var(--success); }
+.toast.success svg { color: var(--success); }
 
-.toast.toast-error {
+.toast.error {
   border-left: 3px solid var(--error);
 }
 
-.toast.toast-error svg { color: var(--error); }
+.toast.error svg { color: var(--error); }
 
-.toast.toast-warning {
+.toast.warning {
   border-left: 3px solid var(--warning);
 }
 
-.toast.toast-warning svg { color: var(--warning); }
+.toast.warning svg { color: var(--warning); }
 
-.toast.toast-info {
+.toast.info {
   border-left: 3px solid var(--info);
 }
 
-.toast.toast-info svg { color: var(--info); }
+.toast.info svg { color: var(--info); }
 
 .toast svg {
   width: 18px;
@@ -2223,6 +2211,199 @@ mark.fr-highlight {
 }
 
 /* ==========================================================
+   26b. MISSING UI COMPONENTS
+   ========================================================== */
+
+/* Flashcard label */
+.fc-label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+/* Flashcard hint */
+.fc-hint {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  margin-top: 12px;
+}
+
+/* Settings hint */
+.settings-hint {
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+/* API key row */
+.api-key-row {
+  display: flex;
+  gap: 8px;
+}
+.api-key-row input {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+/* API status */
+.api-status {
+  font-size: 0.82rem;
+  margin-top: 8px;
+}
+.api-status.success {
+  color: var(--success);
+}
+
+/* Browser AI progress */
+.browser-ai-progress {
+  margin-top: 10px;
+}
+.browser-ai-progress .progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.browser-ai-progress .progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 100px;
+  transition: width 0.5s ease;
+}
+.browser-ai-progress .progress-text {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  display: block;
+}
+
+/* Logo wrapper in sidebar header */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* Result header */
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border-light);
+}
+.result-header h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.copy-btn {
+  font-size: 0.78rem;
+  padding: 4px 12px;
+}
+
+/* Progress bar base classes (used by OCR progress) */
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 100px;
+  transition: width 0.4s ease;
+}
+.progress-text {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* Diff legend samples */
+.diff-added-sample {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: rgba(16, 185, 129, 0.25);
+}
+.diff-removed-sample {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: rgba(239, 68, 68, 0.25);
+}
+
+/* Nav Groups */
+.nav-group {
+  margin-bottom: 4px;
+}
+
+.nav-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.nav-group-header:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.nav-group-header svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.nav-group.collapsed .nav-group-header svg {
+  transform: rotate(-90deg);
+}
+
+.nav-group-items {
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+  max-height: 500px;
+}
+
+.nav-group.collapsed .nav-group-items {
+  max-height: 0;
+}
+
+.sidebar.collapsed .nav-group-header {
+  display: none;
+}
+
+/* ==========================================================
    27. DESIGN B — VIBRANT CAMPUS
    ========================================================== */
 
@@ -2460,6 +2641,14 @@ mark.fr-highlight {
   margin-top: 8px;
 }
 
+[data-design="C"] .panel-header {
+  margin-bottom: 28px;
+}
+
+[data-design="C"] .panel-header h1 {
+  margin-bottom: 10px;
+}
+
 /* Design C: Logo text */
 [data-design="C"] .logo-text {
   font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
@@ -2574,8 +2763,8 @@ mark.fr-highlight {
     width: var(--sidebar-width);
   }
 
-  .sidebar.collapsed .nav-tab .nav-label,
-  .sidebar.collapsed .theme-toggle .nav-label,
+  .sidebar.collapsed .nav-tab span,
+  .sidebar.collapsed .theme-toggle span,
   .sidebar.collapsed .logo-text {
     opacity: 1;
     width: auto;
@@ -2602,11 +2791,11 @@ mark.fr-highlight {
     max-width: 100%;
   }
 
-  .audiobook-settings {
+  .audio-settings {
     grid-template-columns: 1fr;
   }
 
-  .input-methods-grid {
+  .input-methods {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -2643,7 +2832,7 @@ mark.fr-highlight {
     font-size: 0.65rem;
   }
 
-  .flashcards-container {
+  .flashcards-deck {
     grid-template-columns: 1fr;
   }
 
@@ -2693,7 +2882,7 @@ mark.fr-highlight {
     font-size: 0.85rem;
   }
 
-  .input-methods-grid {
+  .input-methods {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
@@ -2706,7 +2895,7 @@ mark.fr-highlight {
     display: none;
   }
 
-  .text-input-container textarea {
+  .text-input-area textarea {
     min-height: 200px;
     padding: 12px;
   }
@@ -2770,7 +2959,7 @@ mark.fr-highlight {
     gap: 10px;
   }
 
-  .pills-row {
+  .option-pills {
     gap: 6px;
   }
 
@@ -2797,22 +2986,22 @@ mark.fr-highlight {
     font-size: 0.9rem;
   }
 
-  .audiobook-text-display {
+  .audio-text-display {
     padding: 16px;
     min-height: 150px;
   }
 
-  .translate-settings {
+  .translate-controls {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .translate-settings select {
+  .translate-controls select {
     min-width: auto;
     width: 100%;
   }
 
-  .qa-input-row {
+  .qna-input-row {
     flex-direction: column;
   }
 
@@ -2842,7 +3031,7 @@ mark.fr-highlight {
     font-size: 1.15rem;
   }
 
-  .input-methods-grid {
+  .input-methods {
     gap: 8px;
   }
 
@@ -3045,7 +3234,7 @@ mark.fr-highlight {
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  .modal-overlay {
+  .modal {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
