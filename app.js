@@ -282,6 +282,17 @@
     state.results = { summary: '', analysis: '', review: '', flashcards: [], translate: '', qna: [] };
     $('#mainTextarea').value = '';
     updateCharCount();
+
+    // Clear visible result containers so stale results don't linger
+    var resultIds = ['#summaryResult', '#analyzeResult', '#reviewResult', '#translateResult'];
+    resultIds.forEach(function (id) { var el = $(id); if (el) el.innerHTML = ''; });
+    var deck = $('#flashcardsDeck');
+    if (deck) deck.style.display = 'none';
+    var statsGrid = $('#statsGrid');
+    if (statsGrid) statsGrid.style.display = 'none';
+    var qnaHistory = $('#qnaHistory');
+    if (qnaHistory) qnaHistory.innerHTML = '<div class="result-placeholder"><p>Ask a question about your text above</p></div>';
+
     showToast('Text cleared', 'info');
   }
 
@@ -407,6 +418,13 @@
     // Check file size (max 2MB for text files)
     if (file.size > 2 * 1024 * 1024) {
       showToast('File too large. Maximum size is 2MB.', 'warning');
+      e.target.value = '';
+      return;
+    }
+    // Validate file type — only allow text-based files
+    const allowedExts = /\.(txt|md|csv|json|xml|html|htm|log|ini|cfg|yaml|yml|toml|rtf)$/i;
+    if (!allowedExts.test(file.name) && !file.type.startsWith('text/')) {
+      showToast('Unsupported file type. Please upload a text file (.txt, .md, .csv, .json, etc.).', 'warning');
       e.target.value = '';
       return;
     }
@@ -538,7 +556,11 @@
   // ---- Local Fallback Functions ----
 
   function localSummarize(text, length) {
-    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    var sentences = text.match(/[^.!?]+[.!?]+/g);
+    // Fallback: split on newlines if no sentence-ending punctuation found
+    if (!sentences || sentences.length === 0) {
+      sentences = text.split(/\n+/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+    }
     if (sentences.length <= 2) return text;
 
     // Score sentences by word frequency
@@ -588,8 +610,8 @@
 
     // Longest / shortest sentence
     const sentLengths = sentences.map((s) => s.trim().split(/\s+/).length);
-    const longest = Math.max(...sentLengths);
-    const shortest = Math.min(...sentLengths);
+    const longest = sentLengths.length > 0 ? Math.max(...sentLengths) : 0;
+    const shortest = sentLengths.length > 0 ? Math.min(...sentLengths) : 0;
 
     let result = '## Text Statistics (Extended)\n\n';
     result += `- **Average Sentence Length:** ${avgSentLen} words\n`;
@@ -647,10 +669,15 @@
     };
 
     const textWords = text.toLowerCase().match(/\b[a-z]+\b/g) || [];
+    const misspellCounts = {};
     textWords.forEach((w) => {
       if (misspellings[w]) {
-        issues.push({ type: 'Spelling', issue: `"${w}" appears to be misspelled`, suggestion: `Did you mean "${misspellings[w]}"?` });
+        misspellCounts[w] = (misspellCounts[w] || 0) + 1;
       }
+    });
+    Object.entries(misspellCounts).forEach(([w, count]) => {
+      const times = count > 1 ? ` (appears ${count} times)` : '';
+      issues.push({ type: 'Spelling', issue: `"${w}" appears to be misspelled${times}`, suggestion: `Did you mean "${misspellings[w]}"?` });
     });
 
     // Multiple spaces
@@ -706,13 +733,15 @@
     }).filter((s) => s.keyTerms.length > 0 && s.sentence.split(/\s+/).length >= 5);
 
     scored.sort((a, b) => b.score - a.score);
-    const selected = scored.slice(0, parseInt(count));
+    const selected = scored.slice(0, parseInt(count, 10));
 
     return selected.map((item) => {
       // Pick the best key term to blank out
       const term = item.keyTerms.reduce((best, w) => (freq[w] > freq[best] ? w : best), item.keyTerms[0]);
+      // Escape regex metacharacters in the term before using in RegExp
+      const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       // Create fill-in-the-blank
-      const blanked = item.sentence.replace(new RegExp(`\\b${term}\\b`, 'i'), '_____');
+      const blanked = item.sentence.replace(new RegExp(`\\b${escapedTerm}\\b`, 'i'), '_____');
       return {
         question: `Fill in the blank: ${blanked}`,
         answer: term.charAt(0).toUpperCase() + term.slice(1),
@@ -797,15 +826,21 @@
     const html = typeof marked !== 'undefined' ? marked.parse(content) : content.replace(/\n/g, '<br>');
     container.innerHTML = `
       <div class="result-header">
-        <h4>${title || 'Result'}</h4>
-        <button class="btn-secondary copy-btn" onclick="navigator.clipboard.writeText(${JSON.stringify(content).replace(/</g, '\\u003c')}).then(()=>window.__toast('Copied!','success'))">Copy</button>
+        <h4>${escapeHtml(title || 'Result')}</h4>
+        <button class="btn-secondary copy-btn">Copy</button>
       </div>
       <div class="result-content">${html}</div>
     `;
+    // Attach copy handler via addEventListener instead of inline onclick
+    const copyBtn = container.querySelector('.copy-btn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function () {
+        navigator.clipboard.writeText(content).then(function () {
+          showToast('Copied!', 'success');
+        });
+      });
+    }
   }
-
-  // Expose toast for inline handlers
-  window.__toast = showToast;
 
   // ---- Summarize ----
   async function handleSummarize() {
@@ -1000,7 +1035,7 @@ ${state.text}`,
         const jsonMatch = result.match(/\[[\s\S]*\]/);
         cards = JSON.parse(jsonMatch ? jsonMatch[0] : result);
       } catch {
-        showToast('Failed to parse flashcards. Retrying...', 'warning');
+        showToast('Failed to parse flashcards. Please try again.', 'warning');
         hideLoading();
         return;
       }
@@ -1109,6 +1144,8 @@ ${state.text}`,
   let audioInterval = null;
   let audioStartTime = 0;
   let audioPausedAt = 0;
+  let audioTotalSeconds = 60;
+  let audioPausedElapsed = 0;
 
   function populateVoices() {
     const voices = speechSynthesis.getVoices();
@@ -1131,6 +1168,7 @@ ${state.text}`,
     if (speechSynthesis.speaking && !speechSynthesis.paused) {
       speechSynthesis.pause();
       state.audioPlaying = false;
+      audioPausedAt = Date.now();
       $('.play-icon').style.display = '';
       $('.pause-icon').style.display = 'none';
       clearInterval(audioInterval);
@@ -1140,9 +1178,14 @@ ${state.text}`,
     if (speechSynthesis.paused) {
       speechSynthesis.resume();
       state.audioPlaying = true;
+      // Adjust audioStartTime to account for pause duration
+      if (audioPausedAt) {
+        audioStartTime += (Date.now() - audioPausedAt);
+        audioPausedAt = 0;
+      }
       $('.play-icon').style.display = 'none';
       $('.pause-icon').style.display = '';
-      startAudioTimer();
+      startAudioTimer(audioTotalSeconds);
       return;
     }
 
@@ -1152,7 +1195,7 @@ ${state.text}`,
     utterance = new SpeechSynthesisUtterance(state.text);
     const voices = speechSynthesis.getVoices();
     const selectedOpt = $('#voiceSelect').selectedOptions[0];
-    if (selectedOpt) utterance.voice = voices[parseInt(selectedOpt.dataset.idx)];
+    if (selectedOpt) utterance.voice = voices[parseInt(selectedOpt.dataset.idx, 10)];
     utterance.rate = parseFloat($('#speedRange').value);
     utterance.pitch = parseFloat($('#pitchRange').value);
 
@@ -1174,15 +1217,16 @@ ${state.text}`,
     speechSynthesis.speak(utterance);
     state.audioPlaying = true;
     audioStartTime = Date.now();
+    audioPausedAt = 0;
     $('.play-icon').style.display = 'none';
     $('.pause-icon').style.display = '';
 
-    // Estimate total time
+    // Estimate total time and store for resume
     const wordsPerMin = 150 * parseFloat($('#speedRange').value);
     const wordCount = state.text.trim().split(/\s+/).length;
-    const totalSeconds = Math.ceil((wordCount / wordsPerMin) * 60);
+    audioTotalSeconds = Math.ceil((wordCount / wordsPerMin) * 60);
 
-    startAudioTimer(totalSeconds);
+    startAudioTimer(audioTotalSeconds);
   }
 
   function startAudioTimer(totalSeconds) {
@@ -1254,6 +1298,9 @@ ${state.text}`,
         filename = 'textwise-export.json';
         mime = 'application/json';
         break;
+      default:
+        showToast('Unknown export format', 'error');
+        return;
     }
 
     downloadFile(content, filename, mime);
@@ -1324,8 +1371,8 @@ ${state.text}`,
 
     if (fontSelect) {
       fontSelect.addEventListener('change', function () {
-        var display = $('#readingDisplay');
-        if (display) display.style.fontFamily = fontSelect.value;
+        var readingText = $('#readingText');
+        if (readingText) readingText.style.fontFamily = fontSelect.value;
       });
     }
 
@@ -1729,7 +1776,7 @@ ${state.text}`,
       osc.type = 'sine';
       osc.connect(ctx.destination);
       osc.start();
-      setTimeout(function () { osc.stop(); }, 200);
+      setTimeout(function () { osc.stop(); ctx.close(); }, 200);
     } catch (e) {
       // AudioContext not available, silently fail
     }
@@ -1779,6 +1826,12 @@ ${state.text}`,
 
     var origWords = origText.split(/(\s+)/);
     var modWords = modText.split(/(\s+)/);
+
+    // Guard against massive texts that would crash the browser
+    if (origWords.length * modWords.length > 4000000) {
+      showToast('Texts are too large for detailed diff (max ~2000 words each). Please use shorter excerpts.', 'warning');
+      return;
+    }
 
     // Compute LCS using dynamic programming
     var lcs = computeLCS(origWords, modWords);
