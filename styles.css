@@ -2589,10 +2589,11 @@ mark.fr-highlight {
   --text-tertiary: #9b8e7d;
   --text-sidebar: #a09383;
   --text-sidebar-active: #faf7f3;
-  --accent: #8b7355;
-  --accent-hover: #7a6348;
+  --accent: #7a6348;
+  --accent-hover: #6d5b43;
   --accent-light: #ede5d8;
-  --accent-glow: rgba(139, 115, 85, 0.15);
+  --accent-glow: rgba(122, 99, 72, 0.15);
+  --bg-sidebar-active: #7a6348;
   --border: #ddd5c9;
   --border-light: #e8e2d8;
   --radius-sm: 6px;
@@ -2612,6 +2613,7 @@ mark.fr-highlight {
   --bg-tertiary: #252320;
   --bg-sidebar: #0d0c0a;
   --bg-sidebar-hover: #1c1a17;
+  --bg-sidebar-active: rgba(122, 99, 72, 0.35);
   --text-primary: #e8e0d4;
   --text-secondary: #a09383;
   --text-tertiary: #6b5e4f;
@@ -2635,10 +2637,11 @@ mark.fr-highlight {
 [data-design="C"] .panel-header h1::after {
   content: '';
   display: block;
-  width: 40px;
-  height: 2px;
+  width: 60px;
+  height: 3px;
   background: var(--accent);
-  margin-top: 8px;
+  margin-top: 10px;
+  border-radius: 2px;
 }
 
 [data-design="C"] .panel-header {
@@ -2647,6 +2650,11 @@ mark.fr-highlight {
 
 [data-design="C"] .panel-header h1 {
   margin-bottom: 10px;
+}
+
+[data-design="C"] .panel-header .subtitle {
+  font-style: italic;
+  color: var(--text-secondary);
 }
 
 /* Design C: Logo text */
@@ -2709,6 +2717,38 @@ mark.fr-highlight {
   background: var(--accent);
 }
 
+/* Design C: Secondary headings — extend Playfair */
+[data-design="C"] .export-card h3,
+[data-design="C"] .input-method-card h3,
+[data-design="C"] .modal-header h2,
+[data-design="C"] .settings-section h3 {
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+}
+
+/* Design C: Stats grid — wider gap */
+[data-design="C"] .stats-grid {
+  gap: 16px;
+}
+
+/* Design C: Stat cards — background differentiation, no border */
+[data-design="C"] .stat-card {
+  border-color: var(--border-light);
+  background: var(--bg-tertiary);
+}
+
+/* Design C: Softer borders on non-interactive containers */
+[data-design="C"] .result-area,
+[data-design="C"] .audio-text-display,
+[data-design="C"] .reading-controls,
+[data-design="C"] .fr-controls,
+[data-design="C"] .fr-preview,
+[data-design="C"] .wordcloud-display,
+[data-design="C"] .diff-output,
+[data-design="C"] .reading-display,
+[data-design="C"] .browser-ai-settings {
+  border-color: var(--border-light);
+}
+
 /* Design C: Export card */
 [data-design="C"] .export-card {
   border-radius: var(--radius-md);
@@ -2724,6 +2764,15 @@ mark.fr-highlight {
 
 [data-design="C"] .pomo-progress-ring {
   stroke: var(--accent);
+}
+
+/* Design C: Text input area softer border */
+[data-design="C"] .text-input-area {
+  border-color: var(--border-light);
+}
+
+[data-design="C"] .text-input-area:focus-within {
+  border-color: var(--accent);
 }
 
 /* Design C: Result content blockquote */
