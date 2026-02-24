@@ -246,6 +246,15 @@ ul, ol {
   margin: 0 auto;
 }
 
+.sidebar.collapsed .sidebar-header {
+  padding: 16px 10px;
+  justify-content: center;
+}
+
+.sidebar.collapsed .logo {
+  display: none;
+}
+
 /* Sidebar Nav */
 .nav-tabs {
   flex: 1;
